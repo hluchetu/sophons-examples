@@ -29,3 +29,27 @@ unfaithful.
 ```bash
 uv run evaluation/faithfulness.py
 ```
+
+### [pass_k.py](pass_k.py)
+
+An `EvalRunner` sweep: a support agent with an order-lookup tool, run over
+a versioned test set three times per case, judged on trajectory, tool
+parameters, and output. The report shows the two rates that matter:
+
+```
+pass rate (per trial):  100%
+pass^3 (per case):    100%
+
+dimension averages:
+  correctness     1.00
+  relevancy       1.00
+  tool_parameters 1.00
+  trajectory      1.00
+```
+
+pass^k (Sierra's tau-bench metric) only credits a case if **every** trial
+passes — consistency, not luck.
+
+```bash
+uv run evaluation/pass_k.py
+```
