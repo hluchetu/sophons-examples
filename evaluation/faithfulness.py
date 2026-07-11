@@ -62,7 +62,12 @@ async def main() -> None:
         verdict = result.scores[0]
         print(f"--- {label}")
         print(f"passed={verdict.passed}  score={verdict.score:.2f}")
-        print(f"reason: {verdict.reason}\n")
+        print(f"reason: {verdict.reason}")
+        for cv in verdict.metadata.get("claim_verdicts", []):
+            mark = "+" if cv["supported"] else "x"
+            print(f"  [{mark}] {cv['claim']}")
+            print(f"      evidence: {cv['evidence']}")
+        print()
 
 
 if __name__ == "__main__":
