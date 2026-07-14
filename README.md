@@ -11,6 +11,7 @@ script with its own README explaining what it demonstrates and how to run it.
 | [observability/](observability/) | Agents traced end-to-end with OpenTelemetry — console spans, OTLP export, the full span tree of a run |
 | [evaluation/](evaluation/) | Judging agent answers with `sophons.evals` — LLM-as-judge verdicts, faithfulness via decompose-then-verify |
 | [guardrails/](guardrails/) | Blocking unsafe actions before they happen — tool permission policies, PII redaction, guarded vs unguarded |
+| [rag/](rag/) | Retrieval-augmented generation stage by stage — local embeddings, vector search, grounded answers |
 
 ## Setup
 
