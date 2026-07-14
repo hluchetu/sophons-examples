@@ -6,6 +6,8 @@ requires-python = ">=3.11"
 dependencies = [
     "sophons[otel,openai]",
     "pydantic-settings>=2.0",
+    "rich>=15.0.0",
+    "prompt-toolkit>=3.0.52",
 ]
 
 [tool.uv.sources]

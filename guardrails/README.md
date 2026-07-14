@@ -44,3 +44,14 @@ alternatives instead of crashing.
 ```bash
 uv run guardrails/human_approval.py
 ```
+
+### [approval_chat.py](approval_chat.py)
+
+The interactive version: a rich chat CLI (panels, history, metrics) where
+approval requests render as panels inside the conversation and you decide
+live. Built on the `CallbackApprover` seam — the approver is just an async
+function that draws a panel and reads your answer.
+
+```bash
+uv run guardrails/approval_chat.py
+```
