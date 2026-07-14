@@ -25,3 +25,22 @@ card number from the input before the model ever sees it.
 ```bash
 uv run guardrails/guarded_agent.py
 ```
+
+### [human_approval.py](human_approval.py)
+
+Human in the loop at the terminal: refunds up to 100.00 run unattended;
+anything larger pauses the run and asks the person at the keyboard —
+the Claude Code permission-prompt pattern.
+
+```
+[approval needed] refund of 250.0 exceeds the auto-approve limit of 100.0
+  -> refund_order({'order_id': 'ord_42', 'amount': 250.0})
+Approve? [y/N]
+```
+
+Deny it and the model is told who said no — it explains and offers
+alternatives instead of crashing.
+
+```bash
+uv run guardrails/human_approval.py
+```
