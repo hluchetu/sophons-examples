@@ -31,3 +31,13 @@ arithmetic.
 ```bash
 uv run rag/naive.py
 ```
+
+### [chat.py](chat.py)
+
+The same pipeline behind the sophons terminal (`sophons.cli.chat`): ask
+questions interactively; each answer's footer names the files it was
+grounded on.
+
+```bash
+uv run rag/chat.py
+```
