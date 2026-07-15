@@ -11,22 +11,25 @@ downloads once on first run). Generation uses DeepSeek via `.env`.
 
 ### [naive.py](naive.py)
 
-The baseline pipeline, five stages explicit: load ([docs/](docs/)) ->
-split -> embed -> store -> retrieve + generate. The same question asked
-bare and grounded:
+The baseline pipeline, five stages explicit: load ([docs/](docs/), the
+Luche Bank corpus) -> split -> embed -> store -> retrieve + generate.
+The same question asked bare and grounded:
 
 ```
 === BARE (no retrieval)
-Refund policies vary by company... I recommend checking the service's
-official refund policy...
+Whether the transfer can be reversed depends on several factors...
+(a page of generic advice: contact your bank, PayPal, small claims...)
 
 === GROUNDED (naive RAG)
-Based solely on the context, no. Annual plans include a 14-day refund
-window... three weeks (21 days) is past the 14-day window.
+After 48 hours, a reversal is only possible with a fraud report filed
+at a branch or through the app... three days ago (more than 48 hours),
+it cannot be reversed through the standard wrong-recipient process.
+
+retrieved from: reversals.md#chunk_0, branches.md#chunk_1, ...
 ```
 
-The bare model deflects; the grounded one answers, cites, and does the
-arithmetic.
+The bare model produces a wall of maybe; the grounded one answers from
+the actual policy and cites it.
 
 ```bash
 uv run rag/naive.py
@@ -40,4 +43,31 @@ grounded on.
 
 ```bash
 uv run rag/chat.py
+```
+
+### [hybrid.py](hybrid.py)
+
+BM25 (keywords), semantic (meaning), and RRF fusion compared by the
+answer's rank per retriever — including fusion's honest failure mode
+on a small, topically narrow corpus:
+
+```
+query: How much is FEE-WDR-021?
+  bm25      answer at rank #1
+  semantic  answer at rank #3
+  hybrid    answer at rank #2 (of top 3)
+
+query: am i charged extra when buying things overseas with my visa?
+  bm25      answer at rank not returned
+  semantic  answer at rank #1
+  hybrid    answer at rank not in top 3 (of top 3)
+```
+
+Fusion rescues the exact-identifier query and buries the paraphrase
+one — on 23 chunks, every engine ranks everything, so consensus junk
+outvotes a single first place. RRF needs truncated lists over a large,
+diverse corpus to shine. Measuring this properly is Part 8's subject.
+
+```bash
+uv run rag/hybrid.py
 ```

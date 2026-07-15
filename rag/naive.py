@@ -77,7 +77,7 @@ async def main() -> None:
     )
     retriever = build_retriever()
 
-    question = "Can I get a refund on an annual plan after three weeks?"
+    question = "I sent money to the wrong number three days ago — can the transfer still be reversed?"
 
     # Bare: the model alone, no documents
     print("=== BARE (no retrieval)")
