@@ -31,7 +31,12 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-chat"
 
 
-settings = Settings()
+def load_settings() -> Settings:
+    # Pydantic Settings loads required values from the environment at runtime.
+    return Settings()  # pyright: ignore[reportCallIssue]
+
+
+settings = load_settings()
 
 
 @tool
@@ -42,29 +47,29 @@ def refund_order(order_id: str, amount: float) -> str:
 
 AUTO_APPROVE_LIMIT = 100.0
 
-agent_kwargs = dict(
-    system_prompt="You process refunds for orders. Use the refund_order tool.",
-    guardrails=[
-        ApprovalGuardrail(
-            rules={
-                "refund_order": lambda args: (
-                    f"refund of {args.get('amount')} exceeds the "
-                    f"auto-approve limit of {AUTO_APPROVE_LIMIT}"
-                    if args.get("amount", 0) > AUTO_APPROVE_LIMIT
-                    else None
-                )
-            },
-        )
-    ],
-    approver=ConsoleApprover(),
-)
-
 
 async def main() -> None:
     model = DeepSeekModel(
         model=settings.deepseek_model, api_key=settings.deepseek_api_key
     )
-    agent = Agent(model=model, tools=[refund_order], **agent_kwargs)
+    agent = Agent(
+        model=model,
+        tools=[refund_order],
+        system_prompt="You process refunds for orders. Use the refund_order tool.",
+        guardrails=[
+            ApprovalGuardrail(
+                rules={
+                    "refund_order": lambda args: (
+                        f"refund of {args.get('amount')} exceeds the "
+                        f"auto-approve limit of {AUTO_APPROVE_LIMIT}"
+                        if args.get("amount", 0) > AUTO_APPROVE_LIMIT
+                        else None
+                    )
+                },
+            )
+        ],
+        approver=ConsoleApprover(),
+    )
 
     for request in [
         "Refund 30.00 for order ord_7.",          # under the limit — no prompt

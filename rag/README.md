@@ -71,3 +71,40 @@ diverse corpus to shine. Measuring this properly is Part 8's subject.
 ```bash
 uv run rag/hybrid.py
 ```
+
+### [reranker.py](reranker.py)
+
+Hybrid retrieval builds a wider candidate set, then a
+sentence-transformers cross-encoder reranks the `(question, chunk)` pairs
+with Sophons' document-compressor shape:
+
+```
+hybrid top 5: reversals.md · reversals.md · mobile-app.md · ...
+reranked top 3: reversals.md (2.10) · reversals.md (-3.47) · ...
+```
+
+The point is the production shape: cheap retriever first, expensive
+reranker only on the shortlist, then pass the top chunks to generation.
+
+```bash
+uv run rag/reranker.py
+```
+
+### [query_rewriting.py](query_rewriting.py)
+
+The next repair asks the model for several better search queries,
+retrieves for each one, dedupes the documents, and keeps the best few
+candidates.
+
+```
+original query top 3: branches.md · mobile-app.md · cards.md
+rewrites: wrong-recipient transfer reversal 72 hours policy · ...
+rewritten query top 3: reversals.md · branches.md · reversals.md
+```
+
+The user's phrasing stays human; retrieval gets phrasing built for the
+knowledge base.
+
+```bash
+uv run rag/query_rewriting.py
+```
