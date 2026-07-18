@@ -13,17 +13,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from sophons.documents import Document
 from sophons.integrations.models import SentenceTransformerEmbeddings
 from sophons.integrations.vector_stores import InMemoryVectorStore
 from sophons.loaders import FileLoader
-from sophons.retrieval import BM25Retriever, HybridRetriever, SemanticRetriever
+from sophons.documents import Document
+from sophons.retrieval import BM25Retriever, HybridRetriever, Retriever, SemanticRetriever
 from sophons.splitters import RecursiveCharacterSplitter
 
 DOCS_DIR = Path(__file__).parent / "docs"
 
 
-def load_chunks():
-    documents = []
+def load_chunks() -> list[Document]:
+    documents: list[Document] = []
     for path in sorted(DOCS_DIR.glob("*.md")):
         documents.extend(FileLoader(path).load())
     return RecursiveCharacterSplitter(
@@ -51,7 +53,7 @@ def main() -> None:
          "3.5 percent"),                                    # paraphrase — dense territory
     ]
 
-    def rank_of(retriever, query: str, answer: str, limit: int) -> str:
+    def rank_of(retriever: Retriever, query: str, answer: str, limit: int) -> str:
         ranked = retriever.retrieve(query, limit=limit)
         for i, d in enumerate(ranked):
             if answer in d.content:
