@@ -15,6 +15,8 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from sophons.documents import Document
+from sophons.cli import ui
 from sophons.integrations.models import DeepSeekModel, SentenceTransformerEmbeddings
 from sophons.integrations.vector_stores import InMemoryVectorStore
 from sophons.loaders import FileLoader
@@ -30,7 +32,12 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-chat"
 
 
-settings = Settings()
+def load_settings() -> Settings:
+    # Pydantic Settings loads required values from the environment at runtime.
+    return Settings()  # pyright: ignore[reportCallIssue]
+
+
+settings = load_settings()
 
 DOCS_DIR = Path(__file__).parent / "docs"
 
@@ -46,7 +53,7 @@ Question: {question}"""
 
 def build_retriever() -> SemanticRetriever:
     # Stage 1 — load: files become Documents (metadata carries the source)
-    documents = []
+    documents: list[Document] = []
     for path in sorted(DOCS_DIR.glob("*.md")):
         documents.extend(FileLoader(path).load())
 
@@ -60,7 +67,7 @@ def build_retriever() -> SemanticRetriever:
         vector_store=InMemoryVectorStore(),
     )
     retriever.add(chunks)
-    print(f"indexed {len(documents)} documents as {len(chunks)} chunks\n")
+    ui.note(f"indexed {len(documents)} documents as {len(chunks)} chunks")
     return retriever
 
 
@@ -79,18 +86,26 @@ async def main() -> None:
 
     question = "I sent money to the wrong number three days ago — can the transfer still be reversed?"
 
+    ui.header("naive.py", subtitle="bare vs grounded · Luche Bank corpus")
+
     # Bare: the model alone, no documents
-    print("=== BARE (no retrieval)")
-    print(await ask(model, question), "\n")
+    ui.note("bare (no retrieval)")
+    ui.user(question)
+    ui.agent(await ask(model, question), footer="no retrieval")
 
     # Stage 5 — retrieve + generate: the naive RAG answer
     chunks = retriever.retrieve(question, limit=3)
     context = "\n\n".join(
         f"[{c.metadata.get('file_name', c.id)}] {c.content}" for c in chunks
     )
-    print("=== GROUNDED (naive RAG)")
-    print(await ask(model, GROUNDED_PROMPT.format(context=context, question=question)))
-    print("\nretrieved from:", [c.id for c in chunks])
+    ui.note("grounded (naive RAG)")
+    ui.user(question)
+    ids = ", ".join(c.id.rsplit("/", 1)[-1] for c in chunks)
+    ui.tool(f"retrieve(question, limit=3) → {ids}")
+    ui.agent(
+        await ask(model, GROUNDED_PROMPT.format(context=context, question=question)),
+        footer=f"retrieved from: {chunks[0].id.rsplit('/', 1)[-1]}",
+    )
 
 
 if __name__ == "__main__":

@@ -13,12 +13,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from sophons.cli import ui
 from sophons.documents import Document
 from sophons.integrations.models import SentenceTransformerEmbeddings
 from sophons.integrations.vector_stores import InMemoryVectorStore
 from sophons.loaders import FileLoader
-from sophons.documents import Document
-from sophons.retrieval import BM25Retriever, HybridRetriever, Retriever, SemanticRetriever
+from sophons.retrieval import (
+    BM25Retriever,
+    HybridRetriever,
+    Retriever,
+    SemanticRetriever,
+)
 from sophons.splitters import RecursiveCharacterSplitter
 
 DOCS_DIR = Path(__file__).parent / "docs"
@@ -28,9 +33,9 @@ def load_chunks() -> list[Document]:
     documents: list[Document] = []
     for path in sorted(DOCS_DIR.glob("*.md")):
         documents.extend(FileLoader(path).load())
-    return RecursiveCharacterSplitter(
-        chunk_size=400, chunk_overlap=60
-    ).split_documents(documents)
+    return RecursiveCharacterSplitter(chunk_size=400, chunk_overlap=60).split_documents(
+        documents
+    )
 
 
 def main() -> None:
@@ -48,9 +53,11 @@ def main() -> None:
 
     # (query, a string the answer-bearing chunk must contain)
     queries = [
-        ("How much is FEE-WDR-021?", "KES 110"),           # exact code — sparse territory
-        ("am i charged extra when buying things overseas with my visa?",
-         "3.5 percent"),                                    # paraphrase — dense territory
+        ("How much is FEE-WDR-021?", "KES 110"),  # exact code — sparse territory
+        (
+            "am i charged extra when buying things overseas with my visa?",
+            "3.5 percent",
+        ),  # paraphrase — dense territory
     ]
 
     def rank_of(retriever: Retriever, query: str, answer: str, limit: int) -> str:
@@ -60,13 +67,16 @@ def main() -> None:
                 return f"#{i + 1}"
         return f"not in top {limit}" if limit < total else "not returned"
 
+    ui.header("hybrid.py", subtitle="bm25 vs semantic vs RRF · answer rank per retriever")
+
     for query, answer in queries:
-        print(f"\nquery: {query}")
-        # engines: full-depth rank (their honest full ordering)
-        print(f"  bm25      answer at rank {rank_of(sparse, query, answer, total)}")
-        print(f"  semantic  answer at rank {rank_of(dense, query, answer, total)}")
-        # hybrid: judged the way it runs in production — a shortlist
-        print(f"  hybrid    answer at rank {rank_of(hybrid, query, answer, 3)} (of top 3)")
+        ui.user(query)
+        ui.tool(
+            # engines at full depth; hybrid judged as it runs in production
+            f"bm25: answer at rank {rank_of(sparse, query, answer, total)} · "
+            f"semantic: answer at rank {rank_of(dense, query, answer, total)} · "
+            f"hybrid: answer at rank {rank_of(hybrid, query, answer, 3)} (of top 3)"
+        )
 
 
 if __name__ == "__main__":
