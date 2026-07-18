@@ -1,9 +1,11 @@
 """Hybrid search: dense + sparse fused with Reciprocal Rank Fusion.
 
-Two queries, three retrievers each. The lawyer's exact-identifier query
-defeats semantic search; the paraphrase query defeats keyword search;
-the hybrid wins both. No model calls — this is retrieval only, so you
-can see the ranking differences without generation in the way.
+Two queries, three retrievers each, reporting the answer's rank in every
+ranking. The fee-code query defeats semantic search and fusion rescues
+it. The paraphrase query is won by semantic search alone, and fusion
+buries it — the honest small-corpus failure discussed in Part 3 of the
+series. No model calls; this is retrieval only, so you can see the
+ranking differences without generation in the way.
 
 Run:
     uv run rag/hybrid.py
