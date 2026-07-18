@@ -27,7 +27,12 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-chat"
 
 
-settings = Settings()
+def load_settings() -> Settings:
+    # Pydantic Settings loads required values from the environment at runtime.
+    return Settings()  # pyright: ignore[reportCallIssue]
+
+
+settings = load_settings()
 
 QUESTION = "Do annual plans come with priority support?"
 

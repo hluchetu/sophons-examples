@@ -23,6 +23,7 @@ from rich.panel import Panel
 from rich.text import Text
 
 from sophons.agents import Agent
+from sophons.agents.responses import AgentMetrics
 from sophons.guardrails import (
     ApprovalDecision,
     ApprovalGuardrail,
@@ -40,7 +41,12 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-chat"
 
 
-settings = Settings()
+def load_settings() -> Settings:
+    # Pydantic Settings loads required values from the environment at runtime.
+    return Settings()  # pyright: ignore[reportCallIssue]
+
+
+settings = load_settings()
 console = Console()
 
 _PROMPT_STYLE = Style.from_dict({"prompt": "bold #5f87ff"})
@@ -100,7 +106,7 @@ def _print_user(text: str) -> None:
     )
 
 
-def _print_agent(text: str, metrics) -> None:
+def _print_agent(text: str, metrics: AgentMetrics) -> None:
     subtitle = (
         f"[dim]steps={metrics.steps}  model_calls={metrics.model_calls}  "
         f"tool_calls={metrics.tool_calls}[/dim]"
@@ -140,7 +146,7 @@ def main() -> None:
         approver=CallbackApprover(rich_approval, name="you"),
     )
 
-    session: PromptSession = PromptSession(
+    session: PromptSession[str] = PromptSession(
         history=FileHistory(str(_HISTORY_FILE)), style=_PROMPT_STYLE
     )
 

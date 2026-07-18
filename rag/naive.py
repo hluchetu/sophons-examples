@@ -71,6 +71,11 @@ def build_retriever() -> SemanticRetriever:
     return retriever
 
 
+def chunk_name(document: Document) -> str:
+    source = document.id or document.metadata.get("file_name") or "unknown"
+    return str(source).rsplit("/", 1)[-1]
+
+
 async def ask(model: DeepSeekModel, prompt: str) -> str:
     response = model.invoke([Message(role="user", content=prompt)])
     if asyncio.iscoroutine(response):
@@ -100,11 +105,11 @@ async def main() -> None:
     )
     ui.note("grounded (naive RAG)")
     ui.user(question)
-    ids = ", ".join(c.id.rsplit("/", 1)[-1] for c in chunks)
+    ids = ", ".join(chunk_name(c) for c in chunks)
     ui.tool(f"retrieve(question, limit=3) → {ids}")
     ui.agent(
         await ask(model, GROUNDED_PROMPT.format(context=context, question=question)),
-        footer=f"retrieved from: {chunks[0].id.rsplit('/', 1)[-1]}",
+        footer=f"retrieved from: {chunk_name(chunks[0])}",
     )
 
 

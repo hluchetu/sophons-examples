@@ -15,6 +15,7 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from sophons.cli import chat
+from sophons.documents import Document
 from sophons.integrations.models import DeepSeekModel, SentenceTransformerEmbeddings
 from sophons.integrations.vector_stores import InMemoryVectorStore
 from sophons.loaders import FileLoader
@@ -30,7 +31,12 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-chat"
 
 
-settings = Settings()
+def load_settings() -> Settings:
+    # Pydantic Settings loads required values from the environment at runtime.
+    return Settings()  # pyright: ignore[reportCallIssue]
+
+
+settings = load_settings()
 
 DOCS_DIR = Path(__file__).parent / "docs"
 
@@ -45,7 +51,7 @@ Question: {question}"""
 
 
 def build_retriever() -> SemanticRetriever:
-    documents = []
+    documents: list[Document] = []
     for path in sorted(DOCS_DIR.glob("*.md")):
         documents.extend(FileLoader(path).load())
     chunks = RecursiveCharacterSplitter(
@@ -72,8 +78,12 @@ def main() -> None:
             f"[{c.metadata.get('file_name', c.id)}] {c.content}" for c in chunks
         )
         response = model.invoke(
-            [Message(role="user", content=GROUNDED_PROMPT.format(
-                context=context, question=question))]
+            [
+                Message(
+                    role="user",
+                    content=GROUNDED_PROMPT.format(context=context, question=question),
+                )
+            ]
         )
         if asyncio.iscoroutine(response):
             response = asyncio.run(response)
