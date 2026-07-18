@@ -21,6 +21,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sophons.agents import Agent
 from sophons.guardrails import (
     CREDIT_CARD,
+    Guardrail,
     PatternGuardrail,
     ToolPermissionGuardrail,
 )
@@ -35,7 +36,12 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-chat"
 
 
-settings = Settings()
+def load_settings() -> Settings:
+    # Pydantic Settings loads required values from the environment at runtime.
+    return Settings()  # pyright: ignore[reportCallIssue]
+
+
+settings = load_settings()
 
 REFUNDS_ISSUED: list[float] = []
 
@@ -47,7 +53,7 @@ def refund_order(order_id: str, amount: float) -> str:
     return f"refunded {amount} for {order_id}"
 
 
-GUARDRAILS = [
+GUARDRAILS: list[Guardrail] = [
     PatternGuardrail(
         patterns={"card": CREDIT_CARD},
         boundaries=("input",),
@@ -89,7 +95,10 @@ async def main() -> None:
         model=settings.deepseek_model, api_key=settings.deepseek_api_key
     )
 
-    await run_agent("UNGUARDED", Agent(model=model, tools=[refund_order], system_prompt=SYSTEM))
+    await run_agent(
+        "UNGUARDED",
+        Agent(model=model, tools=[refund_order], system_prompt=SYSTEM),
+    )
     unguarded_total = sum(REFUNDS_ISSUED)
     REFUNDS_ISSUED.clear()
 
