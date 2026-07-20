@@ -92,9 +92,9 @@ uv run rag/reranker.py
 
 ### [query_rewriting.py](query_rewriting.py)
 
-The next repair asks the model for several better search queries,
-retrieves for each one, dedupes the documents, and keeps the best few
-candidates.
+The next repair borrows LangChain's multi-query retriever idea: ask the
+model for several better search queries, retrieve for each one, dedupe
+the documents, and keep the best few candidates.
 
 ```
 original query top 3: branches.md · mobile-app.md · cards.md

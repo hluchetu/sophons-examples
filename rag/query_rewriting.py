@@ -1,8 +1,8 @@
 """Query rewriting: ask once badly, retrieve with better versions.
 
-The user's exact words are not always the best search query. A query
-rewriter asks a model for a few precise search phrases, retrieves for
-each one, then deduplicates the result set.
+The user's exact words are not always the best search query. A
+multi-query retriever asks a model for a few precise rewrites, retrieves
+for each one, then deduplicates the result set.
 
 Run:
     uv run rag/query_rewriting.py
@@ -56,8 +56,8 @@ def load_settings() -> Settings:
     return Settings()  # pyright: ignore[reportCallIssue]
 
 
-class QueryRewritingRetriever:
-    """Sophons retriever wrapper that searches with model-written queries."""
+class MultiQueryRetriever:
+    """LangChain's multi-query idea, in Sophons' plain retriever shape."""
 
     def __init__(
         self,
@@ -140,7 +140,7 @@ def main() -> None:
         model=settings.deepseek_model,
         api_key=settings.deepseek_api_key,
     )
-    rewriting_retriever = QueryRewritingRetriever(retriever=retriever, model=model)
+    multi_query = MultiQueryRetriever(retriever=retriever, model=model)
 
     question = (
         "I made an oopsie payment to a stranger three days ago. "
@@ -154,7 +154,7 @@ def main() -> None:
     baseline = retriever.retrieve(question, limit=3)
     ui.tool("original query top 3: " + " · ".join(source_name(d) for d in baseline))
 
-    queries, rewritten_results = rewriting_retriever.retrieve(question, limit=3)
+    queries, rewritten_results = multi_query.retrieve(question, limit=3)
     rewrites = [query for query in queries if query != question]
     ui.tool("rewrites: " + " · ".join(rewrites))
     ui.tool(
