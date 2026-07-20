@@ -158,7 +158,7 @@ def main() -> None:
     rewrites = [query for query in queries if query != question]
     ui.tool("rewrites: " + " · ".join(rewrites))
     ui.tool(
-        "multi-query top 3: "
+        "rewritten query top 3: "
         + " · ".join(source_name(document) for document in rewritten_results)
     )
 

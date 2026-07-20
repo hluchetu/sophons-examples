@@ -74,12 +74,12 @@ uv run rag/hybrid.py
 
 ### [reranker.py](reranker.py)
 
-BM25 retrieves a wider candidate set, then a sentence-transformers
-cross-encoder reranks the `(question, chunk)` pairs with Sophons'
-document-compressor shape:
+Hybrid retrieval builds a wider candidate set, then a
+sentence-transformers cross-encoder reranks the `(question, chunk)` pairs
+with Sophons' document-compressor shape:
 
 ```
-bm25 top 5: mobile-app.md · reversals.md · mobile-app.md · ...
+hybrid top 5: reversals.md · reversals.md · mobile-app.md · ...
 reranked top 3: reversals.md (2.10) · reversals.md (-3.47) · ...
 ```
 
@@ -99,7 +99,7 @@ the documents, and keep the best few candidates.
 ```
 original query top 3: branches.md · mobile-app.md · cards.md
 rewrites: wrong-recipient transfer reversal 72 hours policy · ...
-multi-query top 3: reversals.md · branches.md · reversals.md
+rewritten query top 3: reversals.md · branches.md · reversals.md
 ```
 
 The user's phrasing stays human; retrieval gets phrasing built for the
