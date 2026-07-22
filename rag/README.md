@@ -108,3 +108,27 @@ knowledge base.
 ```bash
 uv run rag/query_rewriting.py
 ```
+
+### [corrective.py](corrective.py)
+
+Corrective RAG adds a Sophons eval judge between retrieval and
+generation. The first retrieval trusts the user's messy phrasing and
+pulls weak evidence; `ContextRelevanceEvaluator` returns a full
+`EvalScore`, then Sophons' `MultiQueryRetriever` rewrites the question
+and retrieves again. Generation only happens after the corrected
+evidence passes the `context_relevance` dimension.
+
+```
+initial retrieval: branches.md · mobile-app.md · cards.md
+retrieval score: 0.00 passed=False · ...
+rewrite queries: wrong-recipient transfer reversal 72 hours policy · ...
+corrected retrieval: reversals.md · reversals.md · branches.md
+corrected score: 1.00 passed=True · ...
+```
+
+The lesson is the control loop: RAG should not blindly pass retrieved
+chunks to the model just because retrieval returned something.
+
+```bash
+uv run rag/corrective.py
+```
