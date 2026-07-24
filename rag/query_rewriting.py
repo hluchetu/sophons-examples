@@ -18,8 +18,7 @@ from sophons.cli import ui
 from sophons.documents import Document
 from sophons.integrations.models import DeepSeekModel
 from sophons.loaders import FileLoader
-from sophons.models import Message
-from sophons.retrieval import BM25Retriever
+from sophons.retrieval import BM25Retriever, MultiQueryRetriever
 from sophons.splitters import RecursiveCharacterSplitter
 
 DOCS_DIR = Path(__file__).parent / "docs"
@@ -56,64 +55,6 @@ def load_settings() -> Settings:
     return Settings()  # pyright: ignore[reportCallIssue]
 
 
-class MultiQueryRetriever:
-    """LangChain's multi-query idea, in Sophons' plain retriever shape."""
-
-    def __init__(
-        self,
-        *,
-        retriever: BM25Retriever,
-        model: DeepSeekModel,
-        rewrite_count: int = 3,
-        include_original: bool = True,
-    ) -> None:
-        self.retriever = retriever
-        self.model = model
-        self.rewrite_count = rewrite_count
-        self.include_original = include_original
-
-    def rewrite(self, question: str) -> list[str]:
-        response = self.model.invoke(
-            [
-                Message(
-                    role="user",
-                    content=REWRITE_PROMPT.format(
-                        count=self.rewrite_count,
-                        question=question,
-                    ),
-                )
-            ]
-        )
-        rewrites = [
-            line.removeprefix("-").strip()
-            for line in response.content.splitlines()
-            if line.strip()
-        ]
-        if self.include_original:
-            return [*rewrites[: self.rewrite_count], question]
-        return rewrites[: self.rewrite_count]
-
-    def retrieve(
-        self,
-        question: str,
-        *,
-        limit: int = 5,
-    ) -> tuple[list[str], list[Document]]:
-        queries = self.rewrite(question)
-        seen: set[str] = set()
-        results: list[Document] = []
-
-        for query in queries:
-            for document in self.retriever.retrieve(query, limit=limit):
-                key = document.id or document.content
-                if key in seen:
-                    continue
-                seen.add(key)
-                results.append(document.with_metadata(matched_query=query))
-
-        return queries, results[:limit]
-
-
 def load_chunks() -> list[Document]:
     documents: list[Document] = []
     for path in sorted(DOCS_DIR.glob("*.md")):
@@ -140,7 +81,11 @@ def main() -> None:
         model=settings.deepseek_model,
         api_key=settings.deepseek_api_key,
     )
-    multi_query = MultiQueryRetriever(retriever=retriever, model=model)
+    multi_query = MultiQueryRetriever(
+        retriever=retriever,
+        model=model,
+        prompt=REWRITE_PROMPT,
+    )
 
     question = (
         "I made an oopsie payment to a stranger three days ago. "
@@ -154,7 +99,7 @@ def main() -> None:
     baseline = retriever.retrieve(question, limit=3)
     ui.tool("original query top 3: " + " · ".join(source_name(d) for d in baseline))
 
-    queries, rewritten_results = multi_query.retrieve(question, limit=3)
+    queries, rewritten_results = multi_query.retrieve_with_queries(question, limit=3)
     rewrites = [query for query in queries if query != question]
     ui.tool("rewrites: " + " · ".join(rewrites))
     ui.tool(
