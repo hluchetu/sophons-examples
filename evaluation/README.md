@@ -30,6 +30,26 @@ unfaithful.
 uv run evaluation/faithfulness.py
 ```
 
+### [rag.py](rag.py)
+
+A full RAG evaluation pass: load the Luche Bank docs, retrieve evidence,
+generate a grounded answer, then score the completed run across the four
+basic RAG dimensions:
+
+```
+context_relevance   did retrieval find useful evidence?
+faithfulness        is the answer grounded in that evidence?
+answer_relevance    did the answer address the question?
+answer_correctness  did it match the reference answer?
+```
+
+Unlike corrective RAG, this evaluator is not part of the runtime loop.
+The RAG system runs first; evaluation measures the finished run.
+
+```bash
+uv run evaluation/rag.py
+```
+
 ### [pass_k.py](pass_k.py)
 
 An `EvalRunner` sweep: a support agent with an order-lookup tool, run over
