@@ -30,7 +30,13 @@ free text. Needed before anything downstream can reliably chain agents
 or extract data from a response.
 
 - Inspired by: Strands "Structured Output", Pydantic AI (`pydantic_model.py`, `sql_gen.py`, `flight_booking.py`) — this is basically Pydantic AI's whole premise
-- Status: **not started**
+- Status: **done** — `basic.py`, `with_tools.py` (2026-07-27). Needed an SDK
+  change first: `Agent(output_type=...)` in sophons, implemented as an
+  `OutputTool` whose argument schema is the model's JSON schema, intercepted
+  by the loop rather than executed. Tool calling was forced rather than
+  chosen — DeepSeek rejects `response_format={"type": "json_schema"}`.
+  Known gap: `result.output` is typed `Any`, so editors cannot infer the
+  concrete type; generics on `Agent` would fix it.
 
 ## Phase 1 — State & Knowledge
 
