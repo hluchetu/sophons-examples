@@ -16,18 +16,53 @@ array a real tool would use.
 
 Two support messages triaged into `Ticket(category, urgency, summary)`:
 
-```
-You    The ATM at Westlands swallowed my card and I fly out tomorrow!
-Tool   Ticket(category='cards', urgency=5)
-Agent  Customer's card was swallowed by the Westlands ATM and they have a
-       flight tomorrow, requiring urgent assistance.
-       cards · urgency 5/5 · steps=1
+#### Message 1
 
-You    hi, just wondering what the fee code FEE-WDR-021 is about
-Tool   Ticket(category='other', urgency=1)
-Agent  Customer is asking about the meaning of fee code FEE-WDR-021.
-       other · urgency 1/5 · steps=1
+**You**
+
+> The ATM at Westlands swallowed my card and I fly out tomorrow!
+
+**Tool**
+
+```python
+Ticket(
+    category="cards",
+    urgency=5,
+    summary=(
+        "Customer's card was swallowed by the Westlands ATM and they have "
+        "a flight tomorrow, requiring urgent assistance."
+    ),
+)
 ```
+
+**Agent**
+
+> Customer's card was swallowed by the Westlands ATM and they have a flight
+> tomorrow, requiring urgent assistance.
+
+`cards` · `urgency 5/5` · `steps=1`
+
+#### Message 2
+
+**You**
+
+> hi, just wondering what the fee code FEE-WDR-021 is about
+
+**Tool**
+
+```python
+Ticket(
+    category="other",
+    urgency=1,
+    summary="Customer is asking about the meaning of fee code FEE-WDR-021.",
+)
+```
+
+**Agent**
+
+> Customer is asking about the meaning of fee code FEE-WDR-021.
+
+`other` · `urgency 1/5` · `steps=1`
 
 `result.output` is a real `Ticket`, not a string that looks like one —
 `ticket.urgency` is an `int` you can compare, sort, and route on.
