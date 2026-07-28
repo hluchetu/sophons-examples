@@ -6,14 +6,18 @@ and RAG framework built from first principles.
 Each top-level folder is one topic. Every example is a small, self-contained
 script with its own README explaining what it demonstrates and how to run it.
 
+The table reads in build order — each folder leans on the one above it.
+
 | Folder | What it shows |
 |---|---|
 | [tool_use/](tool_use/) | The function-calling loop on its own — one tool, one call, the model's choice and arguments made visible |
 | [structured_output/](structured_output/) | Typed, validated answers via `output_type` — a Pydantic model instead of prose, carried over the tool-calling channel |
+| [sessions/](sessions/) | Whether the agent remembers this conversation — the session id is the switch, the session manager only decides where history lives |
+| [context/](context/) | What actually reaches the model once history outgrows the window — send everything, keep the recent part, or summarize the rest |
+| [rag/](rag/) | Retrieval-augmented generation stage by stage — local embeddings, vector search, grounded answers |
+| [guardrails/](guardrails/) | Blocking unsafe actions before they happen — tool permission policies, PII redaction, guarded vs unguarded |
 | [observability/](observability/) | Agents traced end-to-end with OpenTelemetry — console spans, OTLP export, the full span tree of a run |
 | [evaluation/](evaluation/) | Judging agent answers with `sophons.evals` — LLM-as-judge verdicts, faithfulness via decompose-then-verify |
-| [guardrails/](guardrails/) | Blocking unsafe actions before they happen — tool permission policies, PII redaction, guarded vs unguarded |
-| [rag/](rag/) | Retrieval-augmented generation stage by stage — local embeddings, vector search, grounded answers |
 
 ## Setup
 

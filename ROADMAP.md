@@ -40,14 +40,38 @@ or extract data from a response.
 
 ## Phase 1 — State & Knowledge
 
-### 3. `memory/` — short-term context + a persistent store
-Wrap the tool-use loop with real state: a bounded chat context plus a
-session/vector store that survives across turns.
+### 3. `sessions/` — does the agent remember this conversation?
+Conversation history that survives across turns, and across restarts.
+The session id is what enables persistence; the session manager only
+decides where the history lives.
 
-- Builds on: `agents/tool_use/` (same loop, now stateful)
-- Inspired by: OpenAI Agents SDK `memory/` (SQLite/Redis/SQLAlchemy/file-backed), Strands "Memory Agent"
-- Article: `agent-memory-patterns.mdx`, `what-moves-where-agent-memory.mdx`
-- Status: **not started** (article published, no code yet — there's an earlier sketch in `~/agent-architecture` worth reusing)
+- Builds on: `tool_use/` (same loop, now stateful)
+- Inspired by: OpenAI Agents SDK `memory/` (SQLite/Redis/SQLAlchemy/file-backed), Strands "Session Management"
+- Article: `agent-memory-patterns.mdx`
+- Status: **done** — `session.py` (2026-07-27)
+
+### 3b. `context/` — what actually reaches the model?
+Session memory has no ceiling: every turn is replayed on every later call
+until the request exceeds the context window. A conversation manager
+decides what travels — everything, the recent part, or a summary of the
+rest.
+
+- Builds on: `sessions/` (the history this trims)
+- Inspired by: Strands "Conversation Management"
+- Status: **done** — `context_window.py` (2026-07-28). Needed an SDK pass
+  first: the layer exposed six managers where there are three strategies,
+  and `SummarizingManager` had never worked (it called a method no model
+  implements). See `sophons/docs/context_management_architecture.md`.
+
+### 3c. `memory/` — does it remember you across conversations?
+The first example to use `sophons.memory` — extraction, namespaces,
+retrieval, reflection. Change the session id and a session-only agent
+forgets you completely; this is what survives that boundary.
+
+- Builds on: `sessions/` (the boundary it crosses)
+- Inspired by: Mem0's add/search convention, which `MemoryManager` follows; LangGraph's store-vs-checkpointer split
+- Article: `what-moves-where-agent-memory.mdx`
+- Status: **not started** — the folder does not exist yet
 
 ### 4. `rag/` — retrieval as grounding
 Naive → hybrid (dense + BM25 + RRF) → reranking → query rewriting →

@@ -14,7 +14,7 @@ is only how far the memory reaches:
     session id, FileSessionManager remembers across restarts
 
 Run:
-    uv run memory/session.py
+    uv run sessions/session.py
 """
 
 from __future__ import annotations
@@ -88,7 +88,7 @@ def converse(label: str, agent: Agent, session_id: str | None) -> None:
 
 
 def main() -> None:
-    ui.header("memory/session.py", subtitle="the same two turns, three scopes")
+    ui.header("sessions/session.py", subtitle="the same two turns, three scopes")
 
     # No id: nothing to load, nothing saved. The follow-up has no referent.
     converse("FORGETFUL — no session id", build_agent(), None)

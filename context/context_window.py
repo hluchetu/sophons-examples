@@ -15,7 +15,7 @@ The same five-turn conversation runs through each. Input tokens are reported
 by the provider, so the difference is measured rather than claimed.
 
 Run:
-    uv run memory/context_window.py
+    uv run context/context_window.py
 """
 
 from __future__ import annotations
@@ -94,7 +94,7 @@ def converse(label: str, manager: ConversationManager) -> list[int]:
 
 
 def main() -> None:
-    ui.header("memory/context_window.py", subtitle="five turns, three strategies")
+    ui.header("context/context_window.py", subtitle="five turns, three strategies")
 
     unmanaged = converse("no manager", NullConversationManager())
     windowed = converse("sliding window", SlidingWindowManager(max_messages=6))
