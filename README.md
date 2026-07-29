@@ -13,7 +13,7 @@ The table reads in build order — each folder leans on the one above it.
 | [tool_use/](tool_use/) | The function-calling loop on its own — one tool, one call, the model's choice and arguments made visible |
 | [structured_output/](structured_output/) | Typed, validated answers via `output_type` — a Pydantic model instead of prose, carried over the tool-calling channel |
 | [sessions/](sessions/) | Whether the agent remembers this conversation — the session id is the switch, the session manager only decides where history lives |
-| [memory/](memory/) | Long-term memory — extract durable facts from one turn and inject them into a later run |
+| [memory/](memory/) | Long-term memory — remember customer context and inject it into later support runs |
 | [context/](context/) | What actually reaches the model once history outgrows the window — send everything, keep the recent part, or summarize the rest |
 | [rag/](rag/) | Retrieval-augmented generation stage by stage — local embeddings, vector search, grounded answers |
 | [guardrails/](guardrails/) | Blocking unsafe actions before they happen — tool permission policies, PII redaction, guarded vs unguarded |
