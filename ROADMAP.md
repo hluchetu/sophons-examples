@@ -113,56 +113,41 @@ remembering, you look things up.
 Phases 0 and 1 built an agent that can act, return shapes, and remember.
 This phase is about separating the *decision* from the *execution*. In
 `tool_use/` the model decides and acts in one breath; here the decision
-becomes a value you can inspect, log, validate, and test on its own. That
-separation is also what makes Phase 3 possible — a handoff is a routing
-decision that lands on another agent instead of a tool.
+becomes a value you can inspect, log, validate, and test on its own.
 
-Neither example has SDK surface yet: there is no `Router` or `Planner` in
-sophons. Decide the shape before writing example code — the last three
-examples each needed an SDK pass first, and each time hand-wiring it in the
-example was the wrong answer.
-
-### 5. `routing/` — one decision, then dispatch
-Classify the incoming request and send it to the right prompt, tool, or
-sub-flow. One decision, one hop — the smallest possible "decide, then act".
-
-- Builds on: `structured_output/` (the decision needs a typed shape to be
-  dispatched on)
-- Inspired by: OpenAI Agents SDK `agent_patterns` (routing example)
-- Article: `agent-patterns-routing.mdx`
-- Open design question: is this just `output_type=RouteDecision` plus a dict
-  lookup the caller writes, or does sophons want a `Router` that owns the
-  decide-then-dispatch loop the way `memory_manager=` now owns
-  retrieve-inject-extract? Leaning toward the former — routing is genuinely
-  small, and a wrapper would hide something worth seeing.
-- Status: **not started**
-
-### 6. `planning/` — decompose before you act
+### 5. `planning/` — decompose before you act
 Break a task into ordered steps up front, then execute the plan, instead of
-deciding tool-by-tool. Routing repeated over an ordered list, with state
+deciding tool-by-tool. A decision repeated over an ordered list, with state
 tracked between steps.
 
-- Builds on: `routing/` (each step is a decision) + `sessions/` (a plan is
-  state carried across steps)
+- Builds on: `structured_output/` (each step is a typed decision) +
+  `sessions/` (a plan is state carried across steps)
 - Inspired by: LangGraph `plan-and-execute`, `rewoo`, `lats`
 - Article: `agent-patterns-planning.mdx`
 - Open design question: a plan-execute loop is real machinery — replanning
   when a step fails, tracking which steps are done, deciding when to stop.
-  This one probably does belong in the SDK rather than an example.
+  This one probably does belong in the SDK rather than an example, unlike
+  routing, which turned out to be two lines.
 - Status: **not started**
 
 ## Phase 3 — Multiple Agents
 
-### 7. `multi_agent/` — orchestrator + specialists, and handoffs
+### 6. `multi_agent/` — orchestrator + specialists, and handoffs
 Generalize routing from "pick a tool" to "pick another agent, and hand it
 the conversation." Covers both agents-as-tools and full context handoff.
 
-- Builds on: `routing/` (the same decision, landing on an agent instead of a tool)
+- Builds on: `structured_output/` (the routing decision, typed) + `planning/`
+- Absorbs routing. A `routing/` folder was created and deleted on 2026-07-29:
+  classify-then-dispatch is `output_type` plus a dict lookup, which
+  `structured_output/basic.py` already shows when it grades a ticket into a
+  category. There was nothing left for the example to teach. Routing belongs
+  here instead, where the decision lands on an *agent* rather than a handler
+  and control can pass onward — which is the part that is actually new.
 - Inspired by: OpenAI Agents SDK `handoffs`, Pydantic AI `medical_agent_delegation.py`, LangGraph `multi_agent`, Strands "Multi-Agent Example"
 - Article: `agent-patterns-multi-agent.mdx`
 - Status: **not started** (`agents/agentic_RAG/` is an early taste of this, worth revisiting once this folder exists)
 
-### 8. `reflection/` — a second pass reviews the first
+### 7. `reflection/` — a second pass reviews the first
 A critic (a second agent, or a second pass) checks and revises the
 original output before it's returned. The natural next thing to build
 once you have two agents talking to each other.
@@ -177,22 +162,22 @@ once you have two agents talking to each other.
 These wrap around whatever you've built above, so they land after the
 agent patterns exist, not before.
 
-### 9. `guardrails/` — block unsafe actions before they happen
+### 8. `guardrails/` — block unsafe actions before they happen
 Tool permission policies, PII redaction, human approval gates.
 
 - Article: `agent-patterns-guardrails.mdx`
 - Status: **done** — `approval_chat.py`, `guarded_agent.py`, `human_approval.py`; audited 2026-07-26, no issues found
 
-### 10. `observability/` — trace the whole run
+### 9. `observability/` — trace the whole run
 Once there are multiple moving parts (tools, retrieval, sub-agents,
 critics), you need to see what actually happened, end to end.
 
 - Article: `agent-patterns-observability.mdx`
-- Status: **done** — `traced_agent.py`; extend span coverage once `planning/`, `routing/`, `multi_agent/` exist; audited 2026-07-26, small polish queue in the Review Log below
+- Status: **done** — `traced_agent.py`; extend span coverage once `planning/` and `multi_agent/` exist; audited 2026-07-26, small polish queue in the Review Log below
 
-### 11. `evaluation/` — judge the output, not just watch it run
+### 10. `evaluation/` — judge the output, not just watch it run
 LLM-as-judge, faithfulness (decompose-then-verify), pass@k — currently
-scoped to RAG, worth extending to routing/multi-agent/reflection outputs
+scoped to RAG, worth extending to planning/multi-agent/reflection outputs
 once those exist.
 
 - Article: `agent-patterns-evaluation.mdx`
@@ -200,7 +185,7 @@ once those exist.
 
 ## Phase 5 — Ship It
 
-### 12. `capstone/` — one real vertical demo
+### 11. `capstone/` — one real vertical demo
 Wire tool_use + structured_output + memory + rag + guardrails +
 multi_agent together into one demo people would actually recognize as
 "an agent" — e.g. a support-ticket triage agent, reusing the existing
@@ -210,7 +195,7 @@ bank-support docs corpus already in `rag/docs/`.
 - Inspired by: Pydantic AI `bank_support.py` / `flight_booking.py`, LangGraph `customer-support`, OpenAI Agents SDK `customer_service`
 - Status: **not started**
 
-### 13. `deployment/` — run it as a real service
+### 12. `deployment/` — run it as a real service
 Containerize the capstone, then ship it to one real target — start with
 a single managed target (Fargate or Lambda) rather than covering every
 option. The part every framework treats as separate from "agent
