@@ -104,29 +104,51 @@ Naive → hybrid (dense + BM25 + RRF) → reranking → query rewriting →
 corrective retry. Retrieval is memory's external counterpart: instead of
 remembering, you look things up.
 
-- Builds on: `memory/` (assembling context), `agents/structured_output/` (grounded, citation-formatted answers)
+- Builds on: `sessions/` (assembling context), `structured_output/` (grounded, citation-formatted answers)
 - Inspired by: every framework's `rag` example, plus your own `RAG_SERIES_PLAN.md`
 - Status: **mostly done** — `naive.py`, `hybrid.py`, `reranker.py`, `query_rewriting.py`, `corrective.py` all exist; audited 2026-07-26, fix queue in the Review Log below
 
 ## Phase 2 — Decision-Making
 
-### 5. `planning/` — decompose before you act
-Plan-and-execute: break a task into ordered steps up front, then run the
-plan, instead of deciding tool-by-tool.
+Phases 0 and 1 built an agent that can act, return shapes, and remember.
+This phase is about separating the *decision* from the *execution*. In
+`tool_use/` the model decides and acts in one breath; here the decision
+becomes a value you can inspect, log, validate, and test on its own. That
+separation is also what makes Phase 3 possible — a handoff is a routing
+decision that lands on another agent instead of a tool.
 
-- Builds on: `agents/tool_use/` + `memory/` (a plan is state you track across steps)
-- Inspired by: LangGraph `plan-and-execute`, `rewoo`, `lats`
-- Article: `agent-patterns-planning.mdx`
-- Status: **not started**
+Neither example has SDK surface yet: there is no `Router` or `Planner` in
+sophons. Decide the shape before writing example code — the last three
+examples each needed an SDK pass first, and each time hand-wiring it in the
+example was the wrong answer.
 
-### 6. `routing/` — one decision, then dispatch
-Classify the incoming request and send it to the right tool, prompt, or
-sub-flow. The simplest possible "decide, then act" pattern — a
-degenerate one-step plan.
+### 5. `routing/` — one decision, then dispatch
+Classify the incoming request and send it to the right prompt, tool, or
+sub-flow. One decision, one hop — the smallest possible "decide, then act".
 
-- Builds on: `agents/structured_output/` (the router's decision needs a typed shape), `planning/`
+- Builds on: `structured_output/` (the decision needs a typed shape to be
+  dispatched on)
 - Inspired by: OpenAI Agents SDK `agent_patterns` (routing example)
 - Article: `agent-patterns-routing.mdx`
+- Open design question: is this just `output_type=RouteDecision` plus a dict
+  lookup the caller writes, or does sophons want a `Router` that owns the
+  decide-then-dispatch loop the way `memory_manager=` now owns
+  retrieve-inject-extract? Leaning toward the former — routing is genuinely
+  small, and a wrapper would hide something worth seeing.
+- Status: **not started**
+
+### 6. `planning/` — decompose before you act
+Break a task into ordered steps up front, then execute the plan, instead of
+deciding tool-by-tool. Routing repeated over an ordered list, with state
+tracked between steps.
+
+- Builds on: `routing/` (each step is a decision) + `sessions/` (a plan is
+  state carried across steps)
+- Inspired by: LangGraph `plan-and-execute`, `rewoo`, `lats`
+- Article: `agent-patterns-planning.mdx`
+- Open design question: a plan-execute loop is real machinery — replanning
+  when a step fails, tracking which steps are done, deciding when to stop.
+  This one probably does belong in the SDK rather than an example.
 - Status: **not started**
 
 ## Phase 3 — Multiple Agents
@@ -135,7 +157,7 @@ degenerate one-step plan.
 Generalize routing from "pick a tool" to "pick another agent, and hand it
 the conversation." Covers both agents-as-tools and full context handoff.
 
-- Builds on: `routing/` (routing generalized past single-hop)
+- Builds on: `routing/` (the same decision, landing on an agent instead of a tool)
 - Inspired by: OpenAI Agents SDK `handoffs`, Pydantic AI `medical_agent_delegation.py`, LangGraph `multi_agent`, Strands "Multi-Agent Example"
 - Article: `agent-patterns-multi-agent.mdx`
 - Status: **not started** (`agents/agentic_RAG/` is an early taste of this, worth revisiting once this folder exists)
@@ -200,9 +222,9 @@ patterns": env config, secrets, logging, cold starts.
 
 ## Deliberately deferred / not a top-level folder
 
-- **Extraction** — folded into `agents/structured_output/` as a variant, not its own folder (it's the same schema-constrained-output skill applied to a document instead of a chat turn).
+- **Extraction** — folded into `structured_output/` as a variant, not its own folder (it's the same schema-constrained-output skill applied to a document instead of a chat turn).
 - **Voice/realtime** — already its own series (see above), not duplicated here.
-- **Web navigation / computer use / code assistant** — specialized tool integrations on top of `agents/tool_use/`; worth a follow-up folder once the fundamentals above are solid, not before.
+- **Web navigation / computer use / code assistant** — specialized tool integrations on top of `tool_use/`; worth a follow-up folder once the fundamentals above are solid, not before.
 
 ## Review Log
 
