@@ -58,10 +58,29 @@ rest.
 
 - Builds on: `sessions/` (the history this trims)
 - Inspired by: Strands "Conversation Management"
-- Status: **done** — `context_window.py` (2026-07-28). Needed an SDK pass
-  first: the layer exposed six managers where there are three strategies,
-  and `SummarizingManager` had never worked (it called a method no model
-  implements). See `sophons/docs/context_management_architecture.md`.
+- Status: **withdrawn, needs a redesign.** The SDK side is done and good —
+  three managers instead of six, `SummarizingManager` fixed (it had never
+  worked; it called a method no model implements), tool pairs never split,
+  `reduce_context` for overflow. See
+  `sophons/docs/context_management_architecture.md`.
+
+  The *example* was removed on 2026-07-29 because it did not demonstrate
+  its own claim. It reported `metrics.input_tokens` per turn, which is the
+  **sum of every model call in that turn** — so a turn that used a tool
+  counted two calls and a turn that did not counted one. That variation
+  swamped the effect of trimming, and since the agent's tool decisions are
+  non-deterministic the output changed shape run to run. Observed:
+
+      no manager        693  833  945  487   573
+      sliding window    693  833  938  479  1011
+
+  Unmanaged did not grow, and the managed run finished *larger*.
+
+  The fix identified: **drop the tool from the example.** With no tools each
+  turn is exactly one model call, so `input_tokens` becomes the context size
+  measured by the provider — exact, repeatable, no hook required. Put the
+  facts in the system prompt and ask follow-ups about them. Tools belong to
+  `tool_use/`; here they are noise.
 
 ### 3c. `memory/` — does it remember you across conversations?
 The first example to use `sophons.memory` — extraction, namespaces,
@@ -71,7 +90,14 @@ forgets you completely; this is what survives that boundary.
 - Builds on: `sessions/` (the boundary it crosses)
 - Inspired by: Mem0's add/search convention, which `MemoryManager` follows; LangGraph's store-vs-checkpointer split
 - Article: `what-moves-where-agent-memory.mdx`
-- Status: **not started** — the folder does not exist yet
+- Status: **done** — `customer_support.py` (2026-07-29). Needed an SDK pass
+  first, and a larger one than expected: `Agent(memory_manager=...)` makes
+  memory first-class, `MemoryManager(namespace=..., inject_limit=...)` binds
+  the namespace at construction, and retrieve-inject-extract now happens
+  inside the loop. Also added `sophons.tools.memory` so memory is reachable
+  as a tool the agent calls, and a SQLite storage backend alongside
+  `InMemoryStorage`. The example is one line of wiring as a result:
+  `Agent(model=model, memory_manager=memory)`.
 
 ### 4. `rag/` — retrieval as grounding
 Naive → hybrid (dense + BM25 + RRF) → reranking → query rewriting →

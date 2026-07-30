@@ -14,7 +14,7 @@ The table reads in build order — each folder leans on the one above it.
 | [structured_output/](structured_output/) | Typed, validated answers via `output_type` — a Pydantic model instead of prose, carried over the tool-calling channel |
 | [sessions/](sessions/) | Whether the agent remembers this conversation — the session id is the switch, the session manager only decides where history lives |
 | [memory/](memory/) | Long-term memory — remember customer context and inject it into later support runs |
-| [context/](context/) | What actually reaches the model once history outgrows the window — send everything, keep the recent part, or summarize the rest |
+| [memory/](memory/) | What the agent remembers after the conversation ends — durable facts extracted, stored under a namespace, and recalled in a later one |
 | [rag/](rag/) | Retrieval-augmented generation stage by stage — local embeddings, vector search, grounded answers |
 | [guardrails/](guardrails/) | Blocking unsafe actions before they happen — tool permission policies, PII redaction, guarded vs unguarded |
 | [observability/](observability/) | Agents traced end-to-end with OpenTelemetry — console spans, OTLP export, the full span tree of a run |

@@ -58,5 +58,8 @@ stored, so a tool call is replayed as its *conclusion* rather than as a
 call. And every message carries a stable id, which is what lets a stored
 turn be joined to a trace span or addressed for deletion.
 
-The file grows on every run, without limit. That is the problem
-[context/](../context/) solves.
+The file grows on every run, without limit — every turn is replayed on
+every later call until the request exceeds the model's context window.
+That is what a conversation manager is for: pass
+`SlidingWindowManager(max_messages=6)` or `SummarizingManager(...)` as
+`Agent(conversation_manager=...)` and only part of the history travels.
